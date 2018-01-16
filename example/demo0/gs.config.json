@@ -1,0 +1,7 @@
+{
+    "skeletonPath": "a.skl.json",
+    "targetPath": "./target",
+    "context": {
+        "projectName": "test_gs"
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "templateDir": "./tpl",
+    "ignore": [],
+    "commands": {
+        "before": "ls",
+        "after": "ls"
+    }
+}
