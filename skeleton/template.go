@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	DIRECTORY       = 0
-	FILE            = 1
-	OTHER_FILE_TYPE = 10
+	DIRECTORY           = 0
+	FILE                = 1
+	OTHER_FILE_TYPE     = 10
+	SKELETON_TPL_SUFFIX = ".stpl"
 )
 
 type fileStruct struct {
@@ -56,12 +57,19 @@ func BuildTemplate(tplDir string, // tpl directory path
 				return err
 			}
 			for _, file := range files {
+				nextRelative := filepath.Join(top.Relative, file.Name())
 				// TODO using ignore
-				stack = append(stack, fileStruct{
-					Name:     file.Name(),
-					Type:     getType(file),
-					Relative: filepath.Join(top.Relative, file.Name()),
-				})
+				doIgnore, igErr := shouldIgnore(nextRelative, option.Ignore)
+				if igErr != nil {
+					return igErr
+				}
+				if !doIgnore {
+					stack = append(stack, fileStruct{
+						Name:     file.Name(),
+						Type:     getType(file),
+						Relative: nextRelative,
+					})
+				}
 			}
 			// create directory if not exists
 			cerr := createDir(getAbsPath(top.Relative, targetRoot))
@@ -80,9 +88,21 @@ func BuildTemplate(tplDir string, // tpl directory path
 	return nil
 }
 
-const (
-	SKELETON_TPL_SUFFIX = ".stpl"
-)
+func shouldIgnore(relative string, ignores []string) (bool, error) {
+	log.Println("---------------------")
+	log.Println(relative)
+	log.Println(ignores)
+	for _, ignore := range ignores {
+		matched, err := filepath.Match(ignore, relative)
+		if err != nil {
+			return true, err
+		}
+		if matched {
+			return true, nil
+		}
+	}
+	return false, nil
+}
 
 // copy normal file, but compile specific template file
 // eg: a.js.stpl -> a.js
@@ -105,6 +125,7 @@ func handleFile(file fileStruct, tplDir string, targetRoot string, context map[s
 	}
 
 	if isTplFile {
+		// parse template file
 		tmpl, terr := template.ParseFiles(srcPath)
 		if terr != nil {
 			return terr

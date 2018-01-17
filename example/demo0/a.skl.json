@@ -1,6 +1,6 @@
 {
     "templateDir": "./tpl",
-    "ignore": [],
+    "ignore": ["sig.md"],
     "commands": {
         "before": "ls",
         "after": "ls"
