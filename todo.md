@@ -1,0 +1,1 @@
+- pipe command output to stand io

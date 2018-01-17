@@ -73,7 +73,6 @@ func RunSkeleton(skeletonPath string, targetRoot string, context map[string]inte
 			panic(err)
 		}
 	}
-
 }
 
 func runCommand(cmdStr string, dir string) error {
@@ -111,6 +110,9 @@ func getSkeletonTemplateDirPath(skeletonClassPath, templateDir string) string {
 
 // TODO default global directory
 // require level
+//    - json file path
+//    - directory with skl.json
+//    - from global base directory
 // @return the absolute file path for skeleton
 // TODO download if not exists
 func getSkeletonClassPath(configFilePath, skeletonPath string) string {

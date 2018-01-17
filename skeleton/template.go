@@ -1,9 +1,9 @@
 package skeleton
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +49,6 @@ func BuildTemplate(tplDir string, // tpl directory path
 		switch mode := top.Type; {
 		case mode == DIRECTORY:
 			curFilePath := getAbsPath(top.Relative, tplDir)
-			log.Print(curFilePath)
 			// add new files into stack
 			files, err := ioutil.ReadDir(curFilePath)
 
@@ -88,10 +87,22 @@ func BuildTemplate(tplDir string, // tpl directory path
 	return nil
 }
 
+// support variable in fileName
+func parseFileName(fileName string, context map[string]interface{}) (string, error) {
+	tmpl, err := template.New("fileName").Parse(fileName)
+	if err != nil {
+		return fileName, nil
+	}
+
+	var tpl bytes.Buffer
+	if err = tmpl.Execute(&tpl, context); err != nil {
+		return "", err
+	}
+
+	return tpl.String(), nil
+}
+
 func shouldIgnore(relative string, ignores []string) (bool, error) {
-	log.Println("---------------------")
-	log.Println(relative)
-	log.Println(ignores)
 	for _, ignore := range ignores {
 		matched, err := filepath.Match(ignore, relative)
 		if err != nil {
@@ -111,14 +122,25 @@ func handleFile(file fileStruct, tplDir string, targetRoot string, context map[s
 
 	isTplFile := strings.HasSuffix(file.Relative, SKELETON_TPL_SUFFIX)
 
-	targetFileRelative := file.Relative
+	srcState, srcSErr := os.Stat(srcPath)
+	if srcSErr != nil {
+		return srcSErr
+	}
+
+	// get target file path
+	targetFileRelative, ferr := parseFileName(file.Relative, context)
+	if ferr != nil {
+		return ferr
+	}
+
 	if isTplFile {
-		targetFileRelative = file.Relative[0 : len(file.Relative)-len(SKELETON_TPL_SUFFIX)]
+		targetFileRelative = targetFileRelative[0 : len(targetFileRelative)-len(SKELETON_TPL_SUFFIX)]
 	}
 
 	// detect target file
 	targetPath := getAbsPath(targetFileRelative, targetRoot)
 
+	// check exists
 	tarfi, hasTargetErr := os.Stat(targetPath)
 	if !os.IsNotExist(hasTargetErr) && tarfi.Mode().IsRegular() {
 		return errors.New("Exists file with name " + targetPath)
@@ -130,10 +152,11 @@ func handleFile(file fileStruct, tplDir string, targetRoot string, context map[s
 		if terr != nil {
 			return terr
 		}
-		wf, werr := os.Create(targetPath)
+		wf, werr := os.OpenFile(targetPath, os.O_RDWR|os.O_CREATE, srcState.Mode().Perm())
 		if werr != nil {
 			return werr
 		}
+
 		return tmpl.Execute(wf, context)
 	} else {
 		return os.Link(srcPath, targetPath)
