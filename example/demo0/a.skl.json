@@ -2,7 +2,7 @@
     "templateDir": "./tpl",
     "ignore": ["sig.md"],
     "commands": {
-        "before": "ls",
-        "after": "ls"
+        "before": "pwd && ls -al",
+        "after": "pwd && ls -al"
     }
 }
