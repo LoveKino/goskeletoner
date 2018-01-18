@@ -2,6 +2,7 @@ package skeleton
 
 import (
 	"../util"
+	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -20,6 +21,7 @@ type SkeletonClass struct {
 	TemplateDir string          `json:"templateDir"`
 	Ignore      []string        `json:"ignore"`
 	Commands    SkeletonCommand `json:"commands"`
+	Subs        []SubSkeleton   `json:"subs"`
 }
 
 // command to run when build skeleton
@@ -28,23 +30,30 @@ type SkeletonCommand struct {
 	After  string `json:"after"`
 }
 
+type SubSkeleton struct {
+	SkeletonPath string `json:"skeletonPath"`
+	TargetPath   string `json:"targetPath"`
+	ContextPath  string `json:"contextPath"`
+}
+
 const (
 	DEFAULT_TPL_DIR_NAME    = "stpl"
 	DEFAULT_TARGET_DIR_NAME = "skel_target"
 )
 
-func BuildSkelton(configFilePath string) {
+func BuildSkeleton(configFilePath string) {
 	skeletonConfig := readSkeletonConfig(configFilePath)
 	skeletonPath := getSkeletonClassPath(configFilePath, skeletonConfig.SkeletonPath)
-	targetRoot := getTargetRootPath(configFilePath, skeletonConfig.TargetPath)
+	targetRoot := getTargetRootPath(filepath.Dir(configFilePath), skeletonConfig.TargetPath)
 
 	RunSkeleton(skeletonPath, targetRoot, skeletonConfig.Context)
 }
 
+// @skeletonPath current skeleton class file path
+// @targetRoot target root directory
+// @context context map
 func RunSkeleton(skeletonPath string, targetRoot string, context map[string]interface{}) {
 	skeletonClass := readSkeletonClass(skeletonPath)
-
-	skeletonTplPath := getSkeletonTemplateDirPath(skeletonPath, skeletonClass.TemplateDir)
 
 	// run before command
 	if skeletonClass.Commands.Before != "" {
@@ -54,6 +63,8 @@ func RunSkeleton(skeletonPath string, targetRoot string, context map[string]inte
 		}
 	}
 
+	// template dir
+	skeletonTplPath := getSkeletonTemplateDirPath(skeletonPath, skeletonClass.TemplateDir)
 	// template
 	util.Info("[gs-skeleton] build template from dir:" + skeletonTplPath)
 	buildErr := BuildTemplate(skeletonTplPath, targetRoot, context, TemplateOptions{
@@ -65,6 +76,13 @@ func RunSkeleton(skeletonPath string, targetRoot string, context map[string]inte
 		util.ExitWithError(buildErr)
 	}
 
+	// build sub skeletons
+	buildSubErr := buildSubSkeletons(skeletonClass.Subs, skeletonPath, targetRoot, context)
+
+	if buildSubErr != nil {
+		util.ExitWithError(buildSubErr)
+	}
+
 	// run after command
 	if skeletonClass.Commands.After != "" {
 		util.Info("[gs-skeleton] run command :" + skeletonClass.Commands.After)
@@ -72,6 +90,30 @@ func RunSkeleton(skeletonPath string, targetRoot string, context map[string]inte
 			util.ExitWithError(err)
 		}
 	}
+}
+
+// TODO concurrent
+func buildSubSkeletons(subs []SubSkeleton, skeletonPath string, targetRoot string, context map[string]interface{}) error {
+	for _, sub := range subs {
+		subSkeletonPath := getSkeletonClassPath(skeletonPath, sub.SkeletonPath)
+		subTargetRoot := getTargetRootPath(targetRoot, sub.TargetPath)
+		var subContext map[string]interface{}
+		if sub.ContextPath != "" {
+			nextContext, ok := util.GetByPath(context, sub.ContextPath)
+			if !ok {
+				return errors.New("missing sub context in path " + sub.ContextPath)
+			}
+			subContext, ok = nextContext.(map[string]interface{})
+			if !ok {
+				return errors.New("missing sub context in path " + sub.ContextPath)
+			}
+		}
+
+		// run sub skeleton path
+		RunSkeleton(subSkeletonPath, subTargetRoot, subContext)
+	}
+
+	return nil
 }
 
 func runCommand(cmdStr string, dir string) error {
@@ -90,12 +132,12 @@ func runCommand(cmdStr string, dir string) error {
 }
 
 // using default if not provide
-func getTargetRootPath(configFilePath, targetPath string) string {
+func getTargetRootPath(currentDir, targetPath string) string {
 	tarP := strings.TrimSpace(targetPath)
 	if tarP == "" {
 		tarP = DEFAULT_TARGET_DIR_NAME
 	}
-	return filepath.Join(filepath.Dir(configFilePath), tarP)
+	return filepath.Join(currentDir, tarP)
 }
 
 // using default tpl name if not provide

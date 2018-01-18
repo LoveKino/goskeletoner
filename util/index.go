@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 // TODO support remote url
@@ -28,4 +29,32 @@ func ReadJsonWithPanic(path string, inst interface{}, errMsg string) {
 func ExitWithError(err error) {
 	ErrorInfo(err.Error())
 	os.Exit(1)
+}
+
+func GetByPath(context map[string]interface{}, jsonPath string) (interface{}, bool) {
+	jsonPath = strings.TrimSpace(jsonPath)
+	if jsonPath == "." {
+		return context, true
+	}
+
+	var curContext interface{}
+	curContext = context
+	parts := strings.Split(jsonPath, ".")
+
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			mapCtx, cok := curContext.(map[string]interface{})
+			if !cok {
+				return nil, false
+			}
+			next, ok := mapCtx[part]
+			if !ok {
+				return nil, false
+			}
+			curContext = next
+		}
+	}
+
+	return curContext, true
 }

@@ -24,5 +24,5 @@ func main() {
 		configFilePath = filepath.Join(cwd, DEFAULT_SKELTON_CONFIG)
 	}
 
-	skeleton.BuildSkelton(configFilePath)
+	skeleton.BuildSkeleton(configFilePath)
 }
