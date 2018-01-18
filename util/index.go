@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 // TODO support remote url
@@ -22,4 +23,9 @@ func ReadJsonWithPanic(path string, inst interface{}, errMsg string) {
 		log.Print(errMsg)
 		panic(err)
 	}
+}
+
+func ExitWithError(err error) {
+	ErrorInfo(err.Error())
+	os.Exit(1)
 }

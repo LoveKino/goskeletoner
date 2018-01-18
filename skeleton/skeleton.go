@@ -3,7 +3,6 @@ package skeleton
 import (
 	"../util"
 	"fmt"
-	"log"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -49,28 +48,28 @@ func RunSkeleton(skeletonPath string, targetRoot string, context map[string]inte
 
 	// run before command
 	if skeletonClass.Commands.Before != "" {
-		log.Print("[gs-skeleton] run command :" + skeletonClass.Commands.Before)
+		util.Info("[gs-skeleton] run command :" + skeletonClass.Commands.Before)
 		if err := runCommand(skeletonClass.Commands.Before, ""); err != nil {
-			panic(err)
+			util.ExitWithError(err)
 		}
 	}
 
 	// template
-	log.Print("[gs-skeleton] build template from dir:" + skeletonTplPath)
+	util.Info("[gs-skeleton] build template from dir:" + skeletonTplPath)
 	buildErr := BuildTemplate(skeletonTplPath, targetRoot, context, TemplateOptions{
 		Ignore: skeletonClass.Ignore,
 	})
 
 	if buildErr != nil {
-		log.Print("[gs-skeleton] fail to build template from :" + skeletonPath)
-		panic(buildErr)
+		util.ErrorInfo("[gs-skeleton] fail to build template from :" + skeletonPath)
+		util.ExitWithError(buildErr)
 	}
 
 	// run after command
 	if skeletonClass.Commands.After != "" {
-		log.Print("[gs-skeleton] run command :" + skeletonClass.Commands.After)
+		util.Info("[gs-skeleton] run command :" + skeletonClass.Commands.After)
 		if err := runCommand(skeletonClass.Commands.After, targetRoot); err != nil {
-			panic(err)
+			util.ExitWithError(err)
 		}
 	}
 }
@@ -121,7 +120,7 @@ func getSkeletonClassPath(configFilePath, skeletonPath string) string {
 
 // TODO check config
 func readSkeletonConfig(configFilePath string) SkeletonConfig {
-	log.Print("[gs-skeleton] read skeleton config file:" + configFilePath)
+	util.Info("[gs-skeleton] read skeleton config file:" + configFilePath)
 	var skeletonConfig SkeletonConfig
 	util.ReadJsonWithPanic(configFilePath, &skeletonConfig, "[gs-skeleton] fail to read config content from :"+configFilePath)
 	return skeletonConfig
@@ -129,7 +128,7 @@ func readSkeletonConfig(configFilePath string) SkeletonConfig {
 
 // TODO check class
 func readSkeletonClass(skeletonPath string) SkeletonClass {
-	log.Print("[gs-skeleton] read skeleton class file:" + skeletonPath)
+	util.Info("[gs-skeleton] read skeleton class file:" + skeletonPath)
 	var skeletonClass SkeletonClass
 	util.ReadJsonWithPanic(skeletonPath, &skeletonClass, "[gs-skeleton] fail to read skeleton class from :"+skeletonPath)
 	return skeletonClass
