@@ -37,6 +37,11 @@ func BuildTemplate(tplDir string, // tpl directory path
 	context map[string]interface{}, // context map
 	option TemplateOptions, //
 ) error {
+	_, hasTplDirErr := os.Stat(tplDir)
+	if os.IsNotExist(hasTplDirErr) {
+		return nil
+	}
+
 	stack := []fileStruct{{
 		Name:     filepath.Base(tplDir),
 		Type:     DIRECTORY,
