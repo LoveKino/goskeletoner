@@ -18,6 +18,7 @@ func main() {
 		panic(cwdErr)
 	}
 
+	// parse arguments
 	if len(os.Args) > 1 {
 		configFilePath = filepath.Join(cwd, os.Args[1])
 	} else {
