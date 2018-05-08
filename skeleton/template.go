@@ -1,6 +1,7 @@
 package skeleton
 
 import (
+	"../util"
 	"bytes"
 	"errors"
 	"io/ioutil"
@@ -36,6 +37,11 @@ func BuildTemplate(tplDir string, // tpl directory path
 	context map[string]interface{}, // context map
 	option TemplateOptions, //
 ) error {
+	_, hasTplDirErr := os.Stat(tplDir)
+	if os.IsNotExist(hasTplDirErr) {
+		return nil
+	}
+
 	stack := []fileStruct{{
 		Name:     filepath.Base(tplDir),
 		Type:     DIRECTORY,
@@ -56,7 +62,7 @@ func BuildTemplate(tplDir string, // tpl directory path
 				return err
 			}
 			for _, file := range files {
-				nextRelative := filepath.Join(top.Relative, file.Name())
+				nextRelative := util.JoinPath(top.Relative, file.Name())
 				// TODO using ignore
 				doIgnore, igErr := shouldIgnore(nextRelative, option.Ignore)
 				if igErr != nil {
@@ -183,5 +189,5 @@ func createDir(path string) error {
 }
 
 func getAbsPath(relative string, root string) string {
-	return filepath.Join(root, relative)
+	return util.JoinPath(root, relative)
 }

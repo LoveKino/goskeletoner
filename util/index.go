@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -57,4 +58,12 @@ func GetByPath(context map[string]interface{}, jsonPath string) (interface{}, bo
 	}
 
 	return curContext, true
+}
+
+func JoinPath(path1, path2 string) string {
+	if path2[0] == '/' {
+		return path2
+	}
+
+	return filepath.Join(path1, path2)
 }

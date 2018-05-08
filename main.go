@@ -2,8 +2,8 @@ package main
 
 import (
 	"./skeleton"
+	"./util"
 	"os"
-	"path/filepath"
 )
 
 const DEFAULT_SKELTON_CONFIG = "gs.config.json"
@@ -20,9 +20,9 @@ func main() {
 
 	// parse arguments
 	if len(os.Args) > 1 {
-		configFilePath = filepath.Join(cwd, os.Args[1])
+		configFilePath = util.JoinPath(cwd, os.Args[1])
 	} else {
-		configFilePath = filepath.Join(cwd, DEFAULT_SKELTON_CONFIG)
+		configFilePath = util.JoinPath(cwd, DEFAULT_SKELTON_CONFIG)
 	}
 
 	skeleton.BuildSkeleton(configFilePath)

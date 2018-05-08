@@ -1,5 +1,6 @@
 - pipe command output to stand io
 
+<<<<<<< HEAD
     pipe error
 
 - some tools used to modify file content
@@ -17,3 +18,6 @@
 - dynamic using of gs
 
     example, install a new sub skeleton
+=======
+- sktpl empty situation
+>>>>>>> 583082518f04c5a008258d66c3c0ee3f2f20d534

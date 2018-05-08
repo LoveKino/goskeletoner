@@ -137,7 +137,7 @@ func getTargetRootPath(currentDir, targetPath string) string {
 	if tarP == "" {
 		tarP = DEFAULT_TARGET_DIR_NAME
 	}
-	return filepath.Join(currentDir, tarP)
+	return util.JoinPath(currentDir, tarP)
 }
 
 // using default tpl name if not provide
@@ -146,7 +146,7 @@ func getSkeletonTemplateDirPath(skeletonClassPath, templateDir string) string {
 	if tplDir == "" {
 		tplDir = DEFAULT_TPL_DIR_NAME
 	}
-	return filepath.Join(filepath.Dir(skeletonClassPath), tplDir)
+	return util.JoinPath(filepath.Dir(skeletonClassPath), tplDir)
 }
 
 // TODO default global directory
@@ -157,7 +157,9 @@ func getSkeletonTemplateDirPath(skeletonClassPath, templateDir string) string {
 // @return the absolute file path for skeleton
 // TODO download if not exists
 func getSkeletonClassPath(configFilePath, skeletonPath string) string {
-	return filepath.Join(filepath.Dir(configFilePath), skeletonPath)
+	util.Info("configFilePath:" + configFilePath)
+	util.Info("skeletonPath:" + skeletonPath)
+	return util.JoinPath(filepath.Dir(configFilePath), skeletonPath)
 }
 
 // TODO check config
